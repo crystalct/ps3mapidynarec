@@ -17,13 +17,13 @@ include $(PSL1GHT)/ppu_rules
 #---------------------------------------------------------------------------------
 TARGET		:=	$(notdir $(CURDIR))
 BUILD		:=	build
-SOURCES		:=	source ../debugfont_renderer/source ../bitmap_font
+SOURCES		:=	source ../debugfont_renderer/source
 DATA		:=	data
-SHADERS		:=	shaders ../debugfont_renderer/shaders ../bitmap_font
-INCLUDES	:=	include ../debugfont_renderer/include ../bitmap_font
+SHADERS		:=	shaders ../debugfont_renderer/shaders
+INCLUDES	:=	include ../debugfont_renderer/include ../include
 
-TITLE		:=	MAPI Test - PSL1GHT
-APPID		:=	MAPI0003
+TITLE		:=	RSX Test - PSL1GHT
+APPID		:=	RSX00003
 CONTENTID	:=	UP0001-$(APPID)_00-0000000000000000
 
 #---------------------------------------------------------------------------------
@@ -97,14 +97,14 @@ export OFILES	:=	$(addsuffix .o,$(BINFILES)) \
 #---------------------------------------------------------------------------------
 export INCLUDE	:=	$(foreach dir,$(INCLUDES), -I$(CURDIR)/$(dir)) \
 					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
-					$(LIBPSL1GHT_INC) -I$(PORTLIBS)/include \
+					$(LIBPSL1GHT_INC) \
 					-I$(CURDIR)/$(BUILD)
 
 #---------------------------------------------------------------------------------
 # build a list of library paths
 #---------------------------------------------------------------------------------
 export LIBPATHS	:=	$(foreach dir,$(LIBDIRS),-L$(dir)/lib) \
-					$(LIBPSL1GHT_LIB) -L$(PORTLIBS)/lib
+					$(LIBPSL1GHT_LIB)
 
 export OUTPUT	:=	$(CURDIR)/$(TARGET)
 .PHONY: $(BUILD) clean
@@ -118,15 +118,13 @@ $(BUILD):
 clean:
 	@echo clean ...
 	@rm -fr $(BUILD) $(OUTPUT).elf $(OUTPUT).self $(OUTPUT).fake.self
-	@$(MAKE) -C rsx_sample clean
 
 #---------------------------------------------------------------------------------
 run:
 	ps3load $(OUTPUT).self
 
 #---------------------------------------------------------------------------------
-rsxsample:
-	@$(MAKE) -C rsx_sample --no-print-directory
+pkg:	$(BUILD) $(OUTPUT).pkg
 
 #---------------------------------------------------------------------------------
 else

@@ -1,3 +1,15 @@
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int ps3mapidyn_write_bytecode(int offset, char *buff, int len);
+int ps3mapidyn_init(void);
+
+#ifdef __cplusplus
+}
+#endif
+
 #ifndef __PS3MAPIDYN_H__
 #define __PS3MAPIDYN_H__
 
@@ -15,7 +27,7 @@
 #define PS3MAPI_OPCODE_GET_PROC_MEM		0x0031
 #endif
 
-#define NOP __asm__("nop")  // a nop is 4Byte
+#define NOP __asm__("nop")  // a nop is 4 Byte
 
 #define DYN8B(a)	a;a
 #define DYN16B(a)	a;a;a;a
@@ -40,12 +52,65 @@
 #define DYN512K(a) 	DYN64K(DYN32B(a)) // 131072 nop
 #define DYN1M(a) 	DYN128K(DYN32B(a)) // 262144 nop
 
-void *start_dyn_buff;
-int len_dyn_buff;
-
 #define START_DYNAREC_BUFFER start_dyn_buff
 #define LEN_DYNAREC_BUFFER len_dyn_buff
 #define DYNAREC_ADDRESS_SHIFT 12
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void *start_dyn_buff;
+int len_dyn_buff;
+
+#ifndef __PS3MAPIDYN_CODE__
+#define __PS3MAPIDYN_CODE__
+#ifndef __PS3MAPI_H__
+int ps3mapi_get_core_version(void)
+{
+	lv2syscall2(8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_CORE_VERSION);
+	return_to_user_prog(int);						
+}
+
+int has_ps3mapi(void)
+{
+	return (ps3mapi_get_core_version() >= PS3MAPI_CORE_MINVERSION);
+}
+
+
+int ps3mapi_set_process_mem(process_id_t pid, uint64_t addr, char *buf, int size )
+{
+	lv2syscall6(8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_SET_PROC_MEM, (uint64_t)pid, (uint64_t)addr, (uint64_t)buf, (uint64_t)size);
+	return_to_user_prog(int);
+}
+
+int ps3mapi_get_process_mem(process_id_t pid, uint64_t addr, char *buf, int size)
+{
+	lv2syscall6(8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_PROC_MEM, (uint64_t)pid, (uint64_t)addr, (uint64_t)buf, (uint64_t)size);
+	return_to_user_prog(int);						
+}
+#endif // __PS3MAPI_H__
+
+int ps3mapidyn_write_bytecode(int offset, char *buff, int len)
+{
+	if (offset + len > LEN_DYNAREC_BUFFER || offset < 0 || !buff || offset%4)
+		return 1;
+
+	char *tmp = (char*)malloc(len+DYNAREC_ADDRESS_SHIFT);
+	if(!tmp)
+		return 1;
+	
+	*(uint64_t *)tmp = (uint64_t)START_DYNAREC_BUFFER + offset + DYNAREC_ADDRESS_SHIFT;
+	*(uint32_t *)(tmp+sizeof(uint64_t)) = 0;
+	memcpy((void*)(tmp+DYNAREC_ADDRESS_SHIFT), buff, len);
+	int result = ps3mapi_set_process_mem(sysProcessGetPid(), (uint64_t)START_DYNAREC_BUFFER + offset, tmp, len);
+	free(tmp);
+
+	if (result)
+		return 1;
+
+	return 0;
+}
 
 void FAKEFUN(void) 
 {
@@ -54,6 +119,33 @@ void FAKEFUN(void)
 #else
 	DYN32B(NOP);
 #endif	
-	
 }
+
+int ps3mapidyn_init()
+{
+	if (!has_ps3mapi()) 
+		return 1; 	// Error, ps3mapi not present
+	
+	START_DYNAREC_BUFFER = (void*)*(uint64_t*)FAKEFUN;
+	
+	uint32_t *toffset = (uint32_t*)START_DYNAREC_BUFFER;
+	int x = 0;
+
+	while (*toffset != 0x4e800020)  //Search for blr
+	{
+		toffset++;
+		x++;
+	}
+
+	LEN_DYNAREC_BUFFER = x*4 + 4;  //Dynarec buffer length;
+	return 0;
+}
+
+#endif // __PS3MAPIDYN_CODE__
+
+#ifdef __cplusplus
+}
+#endif
+
+
 #endif /* __PS3MAPIDYN_H__ */

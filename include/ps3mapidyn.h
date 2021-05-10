@@ -1,4 +1,9 @@
 
+#ifdef __CELLOS_LV2__
+#define lv2syscall2 system_call_2
+#define sysProcessGetPid sys_process_getpid
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -54,7 +59,11 @@ int ps3mapidyn_init(void);
 
 #define START_DYNAREC_BUFFER start_dyn_buff
 #define LEN_DYNAREC_BUFFER len_dyn_buff
+#ifndef __CELLOS_LV2__
 #define DYNAREC_ADDRESS_SHIFT 12
+#else
+#define DYNAREC_ADDRESS_SHIFT 8
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,13 +89,21 @@ int has_ps3mapi(void)
 
 int ps3mapi_set_process_mem(process_id_t pid, uint64_t addr, char *buf, int size )
 {
+#ifndef __CELLOS_LV2__
 	lv2syscall6(8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_SET_PROC_MEM, (uint64_t)pid, (uint64_t)addr, (uint64_t)buf, (uint64_t)size);
+#else
+	system_call_6((uint64_t)8,(uint64_t)SYSCALL8_OPCODE_PS3MAPI,(uint64_t)PS3MAPI_OPCODE_SET_PROC_MEM,(uint64_t)pid,(uint64_t)addr,(uint64_t)(uint32_t)buf,(uint64_t)size);
+#endif
 	return_to_user_prog(int);
 }
 
 int ps3mapi_get_process_mem(process_id_t pid, uint64_t addr, char *buf, int size)
 {
+#ifndef __CELLOS_LV2__
 	lv2syscall6(8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_PROC_MEM, (uint64_t)pid, (uint64_t)addr, (uint64_t)buf, (uint64_t)size);
+#else
+	system_call_6((uint64_t)8,(uint64_t)SYSCALL8_OPCODE_PS3MAPI,(uint64_t)PS3MAPI_OPCODE_GET_PROC_MEM,(uint64_t)pid,(uint64_t)addr,(uint64_t)(uint32_t)buf,(uint64_t)size);
+#endif
 	return_to_user_prog(int);						
 }
 #endif // __PS3MAPI_H__
@@ -99,11 +116,20 @@ int ps3mapidyn_write_bytecode(int offset, char *buff, int len)
 	char *tmp = (char*)malloc(len+DYNAREC_ADDRESS_SHIFT);
 	if(!tmp)
 		return 1;
-	
+
+#ifndef __CELLOS_LV2__
 	*(uint64_t *)tmp = (uint64_t)START_DYNAREC_BUFFER + offset + DYNAREC_ADDRESS_SHIFT;
 	*(uint32_t *)(tmp+sizeof(uint64_t)) = 0;
+#else
+	*(uint32_t *)tmp = (uint32_t)START_DYNAREC_BUFFER + offset + DYNAREC_ADDRESS_SHIFT;
+	*(uint32_t *)(tmp+sizeof(uint32_t)) = 0;
+#endif
 	memcpy((void*)(tmp+DYNAREC_ADDRESS_SHIFT), buff, len);
+#ifndef __CELLOS_LV2__
 	int result = ps3mapi_set_process_mem(sysProcessGetPid(), (uint64_t)START_DYNAREC_BUFFER + offset, tmp, len);
+#else
+	int result = ps3mapi_set_process_mem(sysProcessGetPid(), (uint32_t)START_DYNAREC_BUFFER + offset, tmp, len);
+#endif
 	free(tmp);
 
 	if (result)
@@ -126,7 +152,11 @@ int ps3mapidyn_init()
 	if (!has_ps3mapi()) 
 		return 1; 	// Error, ps3mapi not present
 	
+#ifndef __CELLOS_LV2__
 	START_DYNAREC_BUFFER = (void*)*(uint64_t*)FAKEFUN;
+#else
+	START_DYNAREC_BUFFER = (void*)*(uint32_t*)FAKEFUN;
+#endif
 	
 	uint32_t *toffset = (uint32_t*)START_DYNAREC_BUFFER;
 	int x = 0;

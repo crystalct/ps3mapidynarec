@@ -1,0 +1,44 @@
+TARGET		:=	test.elf
+CSOURCES	:= $(wildcard source/*.c)
+CPPSOURCES	:= $(wildcard spurce/*.cpp)
+INCLUDES	:=	include
+CC = $(CELL_SDK)/host-win32/ppu/bin/ppu-lv2-gcc.exe
+CC_AS = $(CELL_SDK)/host-win32/ppu/bin/ppu-lv2-gcc.exe
+CXX = $(CELL_SDK)/host-win32/ppu/bin/ppu-lv2-g++.exe
+STRIP = $(CELL_SDK)/host-win32/ppu/bin/ppu-lv2-strip.exe
+AR = $(CELL_SDK)/host-win32/ppu/bin/ppu-lv2-ar.exe
+
+#---------------------------------------------------------------------------------
+# options for code generation
+#---------------------------------------------------------------------------------
+
+CFLAGS		=	-O3 -Wall -D__CELLOS_LV2__  $(INCLUDE)
+			
+CXXFLAGS	=	$(CFLAGS) -Wno-sign-compare -Wno-missing-braces -Wno-parentheses
+
+#---------------------------------------------------------------------------------
+# build a list of include paths
+#---------------------------------------------------------------------------------
+export INCLUDE	:=	$(foreach dir,$(INCLUDES), -I$(CURDIR)/$(dir)) \
+					$(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+					-I$(CURDIR)/$(BUILD) -I$(CELL_SDK)/target/ppu/include 
+
+OBJS = $(CSOURCES:.c=.o) $(CPPSOURCES:.cpp=.o)
+
+.PHONY: $(TARGET) clean
+
+
+build:
+	@echo Build.....
+	$(MAKE) -f Makefile.oldsdk $(TARGET)
+
+#---------------------------------------------------------------------------------
+$(TARGET): $(OBJS)
+	@$(CXX) -s $(OBJS) -o $(TARGET)
+	@echo $(TARGET) linked!
+	
+#---------------------------------------------------------------------------------
+clean:
+	@echo clean ...
+	@rm -fr source/*.o
+	@rm -fr *.elf

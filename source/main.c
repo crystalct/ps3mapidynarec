@@ -37,11 +37,7 @@ int main(int argc,const char *argv[])
 	if (ps3mapidyn_init())
 		exit(1);  // mapi not present
 			
-#ifndef __CELLOS_LV2__
 	result = ps3mapi_get_process_mem(sysProcessGetPid(), (uint64_t)START_DYNAREC_BUFFER, buf, 100);
-#else
-	result = ps3mapi_get_process_mem(sysProcessGetPid(), (uint32_t)START_DYNAREC_BUFFER, buf, 100);
-#endif
 
 	int tmp_offset = 0;
 	result = ps3mapidyn_write_bytecode(tmp_offset, fret5, 32);
@@ -54,18 +50,12 @@ int main(int argc,const char *argv[])
 	
 	result = ps3mapidyn_write_bytecode(tmp_offset, fret9, 32);
 	
-#ifndef __CELLOS_LV2__
 	func = (int (*)())((uint64_t)START_DYNAREC_BUFFER + tmp_offset);
-#else
-	func = (int (*)())((uint32_t)START_DYNAREC_BUFFER + tmp_offset);
-#endif
+
 	rit=func();
 	
-#ifndef __CELLOS_LV2__
 	result = ps3mapi_get_process_mem(sysProcessGetPid(), (uint64_t)START_DYNAREC_BUFFER, buf, 100);
-#else
-	result = ps3mapi_get_process_mem(sysProcessGetPid(), (uint32_t)START_DYNAREC_BUFFER, buf, 100);
-#endif
+
 	
     return 0;
 }

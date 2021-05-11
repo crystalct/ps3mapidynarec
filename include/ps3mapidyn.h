@@ -1,5 +1,6 @@
 
 #ifdef __CELLOS_LV2__
+#include <sys/process.h>
 #define lv2syscall2 system_call_2
 #define sysProcessGetPid sys_process_getpid
 #endif

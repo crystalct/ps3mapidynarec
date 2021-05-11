@@ -11,4 +11,5 @@ You can use [PS3MAPI Library](https://github.com/bucanero/ps3mapi-lib) by @bucan
 
 Status:
 
-PSL1GHT version: Working!\Old SDK version: In testing....
+PSL1GHT version: Working!\
+Old SDK version: In testing....

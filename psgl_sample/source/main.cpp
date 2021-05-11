@@ -6,6 +6,7 @@
 #include <sys/spu_initialize.h>
 #include <cell/sysmodule.h>
 #include <cell/dbgfont.h>
+#include <sys/timer.h>
 
 #define COLOR_ORANGE	0xff1780f8
 #define COLOR_GREEN		0xff00ff00
@@ -20,22 +21,14 @@
 
 // Let's create the byte code about a simply function: int returnFive() {return 5;}
 // This is the assembly:
-// stdi	r31,-8(r1)
-// stdu	r1,-0x40(r1)
-// mr		r31,r1
-// li		r9,5
-// mr		r3,r9
-// addi	r1,0x40(r31)
-// ld 		r31,-8(r1)
+// li		r3,0x05
 // blr 
 // fret5 array will contain the bytecode of returnFive
-char fret5[32] = { 0xfb, 0xe1, 0xff, 0xf8, 0xf8, 0x21, 0xff, 0xc1, 0x7c, 0x3f, 0x0b, 0x78, 0x39, 0x20, 0x00, 0x05,
-				  0x7d, 0x23, 0x4b, 0x78, 0x38, 0x3f, 0x00, 0x40, 0xeb, 0xe1, 0xff, 0xf8, 0x4e, 0x80, 0x00, 0x20 };
-
+char fret5[32] = { 0x38, 0x60, 0x00, 0x05, 0x4E, 0x80, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 // fret9 will contain the bytecode of returnNine() {return 9;}		  
-char fret9[32] = { 0xfb, 0xe1, 0xff, 0xf8, 0xf8, 0x21, 0xff, 0xc1, 0x7c, 0x3f, 0x0b, 0x78, 0x39, 0x20, 0x00, 0x09,
-				  0x7d, 0x23, 0x4b, 0x78, 0x38, 0x3f, 0x00, 0x40, 0xeb, 0xe1, 0xff, 0xf8, 0x4e, 0x80, 0x00, 0x20 };
+char fret9[32] = { 0x38, 0x60, 0x00, 0x09, 0x4E, 0x80, 0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
+// I added 8 zero bytes because i noticed that ps3mapi_set_process_mem works correctly with lengths 16 byte aligned
 // //////////// //
 
 struct PSGLdevice* device;
@@ -73,8 +66,11 @@ void onShutdown()
 {
 	if (context) psglDestroyContext(context);
 	if (device) psglDestroyDevice(device);
+	sys_timer_usleep(100000);
 	cellDbgFontExit();
+	sys_timer_usleep(100000);
 	psglExit();
+	sys_timer_usleep(100000);
 }
 
 void dbgFontInit()
@@ -170,7 +166,6 @@ int main()
 		// ...
 	}
 
-
 	PSGLinitOptions options =
 	{
 		enable:					PSGL_INIT_MAX_SPUS | PSGL_INIT_INITIALIZE_SPUS,
@@ -236,38 +231,39 @@ int main()
 			sprintf(screen_buffer_out, "\n\nPS3 MAPI DYNAREC TEST\n\nSORRY... MAPI NOT PRESENT");
 		else
 		{
-
-			ret = ps3mapidyn_write_bytecode(tmp_offset, fret5, 32);
+			char *buf = NULL;
+			buf = (char*)malloc(100);
+			ret = ps3mapidyn_write_bytecode(tmp_offset, fret5, 16);
 			if (ret)
-				exit(1);  //Error
+				NOP;  //Error
 
 			int(*func)() = (int (*)())START_DYNAREC_BUFFER;
 			result1 = func(); // result1 should be 5
 
-			tmp_offset += 32 + DYNAREC_ADDRESS_SHIFT; // move to next position available
+			tmp_offset += 16 + DYNAREC_ADDRESS_SHIFT; // move to next position available
 
-			ret = ps3mapidyn_write_bytecode(tmp_offset, fret9, 32);
+			ret = ps3mapidyn_write_bytecode(tmp_offset, fret9, 16);
 			if (ret)
-				exit(1);  //Error
+				NOP;  //Error
 
 			func = (int (*)())((uint64_t)START_DYNAREC_BUFFER + tmp_offset);
 			result2 = func(); // result2 should be 9
 
 			// Prepare screen_buffer_out for DebugFont
-			sprintf(screen_buffer_out, "\n\nPS3 MAPI DYNAREC TEST\n\n"
+			sprintf(screen_buffer_out, "\n\nPS3 MAPI DYNAREC TEST (PSGL VERSION)\n\n"
+				"\nPROCESS PID: %d"
 				"\nDYNAREC BYTECODE BUFFER AT: 0x%llx "
 				"\nLENGTH DYNAREC BYTECODE BUFFER: %d bytes"
 				"\nRESULT FIRST FUNCTION CALL: %d (%s)"
 				"\nRESULT SECOND FUNCYION CALL: %d (%s)",
-				(uint64_t)START_DYNAREC_BUFFER, LEN_DYNAREC_BUFFER,
+				sysProcessGetPid(), (uint64_t)START_DYNAREC_BUFFER, LEN_DYNAREC_BUFFER,
 				result1, result1 == 5 ? "SUCCESS" : "FAIL", result2, result2 == 9 ? "SUCCESS" : "FAIL");
 		}
 		//////////////////////////////
-
-		while (frames <= 50000)
+		while (frames <= 5000)
 		{
 			frames++;
-			cellDbgFontPrintf(0.200f, 0.200f, 0.8000f, 0xffffffff, screen_buffer_out);
+			cellDbgFontPrintf(0.100f, 0.200f, 0.8000f, 0xffffffff, screen_buffer_out);
 			onRender();
 			
 			cellSysutilCheckCallback();

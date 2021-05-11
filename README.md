@@ -7,7 +7,7 @@ PS3 Manager API aka PS3M_API is an API similar to TMAPI or CCAPI, compatible wit
 
 Developer: _NzV_
 
-You can use [PS3MAPI Library](https://github.com/bucanero/ps3mapi-lib) by @bucanero, just put `ps3mapi.h` before `ps3mapidyn.h`, add  `-lps3mapi` to `Makefile` and use all PS3MAPI features (just for PSL1GHT version).
+You can use [PS3MAPI Library](https://github.com/bucanero/ps3mapi-lib) (optional) by @bucanero, just put `ps3mapi.h` before `ps3mapidyn.h`, add  `-lps3mapi` to `Makefile` and use all PS3MAPI features (only for PSL1GHT version).
 
 Status:
 

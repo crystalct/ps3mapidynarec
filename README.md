@@ -9,7 +9,3 @@ Developer: _NzV_
 
 You can use [PS3MAPI Library](https://github.com/bucanero/ps3mapi-lib) (optional) by @bucanero, just put `ps3mapi.h` before `ps3mapidyn.h`, add  `-lps3mapi` to `Makefile` and use all PS3MAPI features (only for PSL1GHT version).
 
-Status:
-
-PSL1GHT version: Working!\
-Old SDK version: In testing....

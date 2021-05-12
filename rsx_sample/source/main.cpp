@@ -223,7 +223,7 @@ int main(int argc,const char *argv[])
 					"\nDYNAREC BYTECODE BUFFER AT: 0x%lx "
 					"\nLENGTH DYNAREC BYTECODE BUFFER: %d bytes"
 					"\nRESULT FIRST FUNCTION CALL: %d (%s)"
-					"\nRESULT SECOND FUNCYION CALL: %d (%s)",
+					"\nRESULT SECOND FUNCTION CALL: %d (%s)",
 					sysProcessGetPid(), (uint64_t)START_DYNAREC_BUFFER, LEN_DYNAREC_BUFFER, 
 					result1, result1 == 5 ? "SUCCESS": "FAIL", result2, result2 == 9 ? "SUCCESS": "FAIL");
 	}

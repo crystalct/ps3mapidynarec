@@ -35,6 +35,8 @@ int ps3mapidyn_init(void);
 #define PS3MAPI_OPCODE_PROC_PAGE_FREE		0x0034
 #endif
 
+#define PAGE_SIZE_AUTO 0
+
 #define NOP __asm__("nop")  // a nop is 4 Byte
 
 #define DYN8B(a)	a;a

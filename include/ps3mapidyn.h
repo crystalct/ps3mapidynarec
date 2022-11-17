@@ -26,11 +26,13 @@ int ps3mapidyn_init(void);
 #ifndef __PS3MAPI_H__
 #define process_id_t					uint32_t
 
-#define SYSCALL8_OPCODE_PS3MAPI			0x7777
-#define PS3MAPI_OPCODE_SET_PROC_MEM		0x0032
-#define PS3MAPI_CORE_MINVERSION			0x0120
-#define PS3MAPI_OPCODE_GET_CORE_VERSION	0x0011
-#define PS3MAPI_OPCODE_GET_PROC_MEM		0x0031
+#define SYSCALL8_OPCODE_PS3MAPI				0x7777
+#define PS3MAPI_OPCODE_SET_PROC_MEM			0x0032
+#define PS3MAPI_CORE_MINVERSION				0x0120
+#define PS3MAPI_OPCODE_GET_CORE_VERSION		0x0011
+#define PS3MAPI_OPCODE_GET_PROC_MEM			0x0031
+#define PS3MAPI_OPCODE_PROC_PAGE_ALLOCATE	0x0033
+#define PS3MAPI_OPCODE_PROC_PAGE_FREE		0x0034
 #endif
 
 #define NOP __asm__("nop")  // a nop is 4 Byte
@@ -72,12 +74,36 @@ int ps3mapidyn_init(void);
 extern "C" {
 #endif
 
+int ps3mapi_process_page_allocate(process_id_t pid, uint64_t size, uint64_t page_size, uint64_t flags, uint64_t is_executable, uint64_t *page_table);
+int ps3mapi_process_page_free(process_id_t pid, uint64_t flags, uint64_t *page_table);
+
 void *start_dyn_buff;
 int len_dyn_buff;
 
 #ifndef __PS3MAPIDYN_CODE__
 #define __PS3MAPIDYN_CODE__
 #ifndef __PS3MAPI_H__
+
+int ps3mapi_process_page_allocate(process_id_t pid, uint64_t size, uint64_t page_size, uint64_t flags, uint64_t is_executable, uint64_t *page_table)
+{
+#ifdef __PSL1GHT__
+	lv2syscall8(8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PROC_PAGE_ALLOCATE, (uint64_t)pid, (uint64_t)size, (uint64_t)page_size, (uint64_t)flags, (uint64_t)is_executable, (uint64_t)page_table);
+#else
+	system_call_8((uint64_t)8,(uint64_t)SYSCALL8_OPCODE_PS3MAPI,(uint64_t)PS3MAPI_OPCODE_PROC_PAGE_ALLOCATE,(uint64_t)pid,(uint64_t)size, (uint64_t)page_size, (uint64_t)flags, (uint64_t)is_executable, (uint64_t)page_table);
+#endif
+	return_to_user_prog(int);						
+}
+
+int ps3mapi_process_page_free(process_id_t pid, uint64_t flags, uint64_t *page_table)
+{
+#ifdef __PSL1GHT__
+	lv2syscall5(8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_PROC_PAGE_FREE, (uint64_t)pid, (uint64_t)flags, (uint64_t)page_table);
+#else
+	system_call_5((uint64_t)8,(uint64_t)SYSCALL8_OPCODE_PS3MAPI,(uint64_t)PS3MAPI_OPCODE_PROC_PAGE_FREE,(uint64_t)pid,(uint64_t)flags, (uint64_t)page_table);
+#endif
+	return_to_user_prog(int);						
+}
+
 int ps3mapi_get_core_version(void)
 {
 	lv2syscall2(8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_CORE_VERSION);

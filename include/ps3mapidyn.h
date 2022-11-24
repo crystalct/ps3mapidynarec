@@ -108,13 +108,27 @@ int ps3mapi_process_page_free(process_id_t pid, uint64_t flags, uint64_t *page_t
 
 int ps3mapi_get_core_version(void)
 {
+#ifdef __PSL1GHT__
 	lv2syscall2(8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_CORE_VERSION);
+#else
+	system_call_2((uint64_t)8,(uint64_t)SYSCALL8_OPCODE_PS3MAPI, (uint64_t)PS3MAPI_OPCODE_GET_CORE_VERSION);
+#endif
 	return_to_user_prog(int);						
 }
 
 int has_ps3mapi(void)
 {
 	return (ps3mapi_get_core_version() >= PS3MAPI_CORE_MINVERSION);
+}
+
+int ps3mapi_get_fw_version(void)
+{
+#ifdef __PSL1GHT__
+	lv2syscall2(8, SYSCALL8_OPCODE_PS3MAPI, PS3MAPI_OPCODE_GET_FW_VERSION);
+#else
+	system_call_2((uint64_t)8,(uint64_t)SYSCALL8_OPCODE_PS3MAPI, (uint64_t)PS3MAPI_OPCODE_GET_FW_VERSION);
+#endif
+	return_to_user_prog(int);						
 }
 
 

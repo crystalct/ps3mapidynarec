@@ -129,6 +129,8 @@ rsxsample:
 	@$(MAKE) -C rsx_sample --no-print-directory
 
 #---------------------------------------------------------------------------------
+pkg:	$(BUILD) $(OUTPUT).pkg
+
 else
 
 DEPENDS	:=	$(OFILES:.o=.d)

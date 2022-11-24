@@ -219,11 +219,14 @@ int main(int argc,const char *argv[])
 		
 		// Prepare screen_buffer_out for DebugFont
 		sprintf(screen_buffer_out, "\n\nPS3 MAPI DYNAREC TEST\n\n"
+					"\nPS3 MAPI CORE VERSION: %d\n"
+					"\nPS3 MAPI FW VERSION: %d\n"
 					"\nPROCESS PID: %d\n"
 					"\nDYNAREC BYTECODE BUFFER AT: 0x%lx "
 					"\nLENGTH DYNAREC BYTECODE BUFFER: %d bytes"
 					"\nRESULT FIRST FUNCTION CALL: %d (%s)"
 					"\nRESULT SECOND FUNCTION CALL: %d (%s)",
+					ps3mapi_get_core_minversion(), ps3mapi_get_fw_version(),
 					sysProcessGetPid(), (uint64_t)START_DYNAREC_BUFFER, LEN_DYNAREC_BUFFER, 
 					result1, result1 == 5 ? "SUCCESS": "FAIL", result2, result2 == 9 ? "SUCCESS": "FAIL");
 	}

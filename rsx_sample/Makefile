@@ -22,7 +22,7 @@ DATA		:=	data
 SHADERS		:=	shaders ../debugfont_renderer/shaders
 INCLUDES	:=	include ../debugfont_renderer/include ../include
 
-TITLE		:=	RSX Test - PSL1GHT
+TITLE		:=	PS3 MAPI Dynarec Test
 APPID		:=	RSX00003
 CONTENTID	:=	UP0001-$(APPID)_00-0000000000000000
 
